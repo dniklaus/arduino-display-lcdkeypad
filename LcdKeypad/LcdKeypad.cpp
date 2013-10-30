@@ -65,7 +65,7 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 , m_keyDebouncer(new Debounce())
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), true, s_defaultKeyPollTime))
 {
-  pinMode(m_lcdBackLightPWMPin, OUTPUT);
+  //pinMode(m_lcdBackLightPWMPin, OUTPUT);
   setBackLightIntensity();
 
   // button adc input
@@ -78,6 +78,7 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 
 LcdKeypad::~LcdKeypad()
 {
+  delete m_keyPollTimer->adapter();
   delete m_keyPollTimer; m_keyPollTimer = 0;
   delete m_keyDebouncer; m_keyDebouncer = 0;
 }
@@ -90,7 +91,7 @@ void LcdKeypad::setBackLightIntensity(int lcdBackLightIntensity)
 
 void LcdKeypad::setBackLightIntensity()
 {
-  analogWrite(m_lcdBackLightPWMPin, m_lcdBackLightIntensity);
+  //analogWrite(m_lcdBackLightPWMPin, m_lcdBackLightIntensity);
 }
 
 void LcdKeypad::handleButtons()

@@ -10,7 +10,7 @@
 
 #include "LiquidCrystal.h"
 
-class LcdKeypad: public LiquidCrystal
+class LcdKeypad : public LiquidCrystal
 {
 public:
   typedef enum
@@ -73,6 +73,11 @@ private:
   static const int s_downKeyLimit;
   static const int s_leftKeyLimit;
   static const int s_selectKeyLimit;
+
+private: // forbidden default functions
+  LcdKeypad& operator = (const LcdKeypad& );  // assignment operator
+  LcdKeypad(const LcdKeypad& src);            // copy constructor
+
 };
 
 #endif /* LCDKEYPAD_H_ */
