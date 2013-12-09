@@ -63,7 +63,7 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 , m_lcdBackLightIntensity(lcdBackLightIntensity)
 , m_currentKey(NO_KEY)
 , m_keyDebouncer(new Debounce())
-, m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), true, s_defaultKeyPollTime))
+, m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
 {
   //pinMode(m_lcdBackLightPWMPin, OUTPUT);
   setBackLightIntensity();
