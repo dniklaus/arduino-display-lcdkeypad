@@ -23,17 +23,17 @@ public:
     , RIGHT_KEY  = 5
   } key;
 
-  LcdKeypad(int lcdRSPin              = s_defaultLcdRSPin,
-            int lcdEnPin              = s_defaultLcdEnPin,
-            int lcdD4Pin              = s_defaultLcdD4Pin,
-            int lcdD5Pin              = s_defaultLcdD5Pin,
-            int lcdD6Pin              = s_defaultLcdD6Pin,
-            int lcdD7Pin              = s_defaultLcdD7Pin,
-            int lcdBackLightPWMPin    = s_defaultLcdBackLightPWMPin,
-            int lcdBackLightIntensity = s_defaultLcdBackLightIntensity);
+  LcdKeypad(int  lcdRSPin              = s_defaultLcdRSPin,
+            int  lcdEnPin              = s_defaultLcdEnPin,
+            int  lcdD4Pin              = s_defaultLcdD4Pin,
+            int  lcdD5Pin              = s_defaultLcdD5Pin,
+            int  lcdD6Pin              = s_defaultLcdD6Pin,
+            int  lcdD7Pin              = s_defaultLcdD7Pin,
+            int  lcdBackLightCtrlPin   = s_defaultLcdBackLightCtrlPin,
+            bool isLcdBackLightOn      = s_defaultIsLcdBackLightOn);
   virtual ~LcdKeypad();
 
-  void setBackLightIntensity(int lcdBackLightIntensity);
+  void setBackLightOn(bool isLcdBackLightOn);
 
   void handleButtons();
 
@@ -47,32 +47,32 @@ public:
   bool isRightKey();
 
 private:
-  void setBackLightIntensity();
+  void setBackLightControl();
 
 private:
-  int m_lcdBackLightPWMPin;
-  int m_lcdBackLightIntensity;
+  int m_lcdBackLightCtrlPin;
+  bool m_isLcdBackLightOn;
   int m_currentKey;
   class Debounce* m_keyDebouncer;
   class Timer* m_keyPollTimer;
 
 private:
-  static const int s_defaultLcdRSPin;
-  static const int s_defaultLcdEnPin;
-  static const int s_defaultLcdD4Pin;
-  static const int s_defaultLcdD5Pin;
-  static const int s_defaultLcdD6Pin;
-  static const int s_defaultLcdD7Pin;
-  static const int s_defaultLcdBackLightPWMPin;
-  static const int s_defaultLcdBackLightIntensity;
+  static const int  s_defaultLcdRSPin;
+  static const int  s_defaultLcdEnPin;
+  static const int  s_defaultLcdD4Pin;
+  static const int  s_defaultLcdD5Pin;
+  static const int  s_defaultLcdD6Pin;
+  static const int  s_defaultLcdD7Pin;
+  static const int  s_defaultLcdBackLightCtrlPin;
+  static const bool s_defaultIsLcdBackLightOn;
 
-  static const int s_defaultKeyAdcPin;
-  static const int s_defaultKeyPollTime;
-  static const int s_rightKeyLimit;
-  static const int s_upKeyLimit;
-  static const int s_downKeyLimit;
-  static const int s_leftKeyLimit;
-  static const int s_selectKeyLimit;
+  static const int  s_defaultKeyAdcPin;
+  static const int  s_defaultKeyPollTime;
+  static const int  s_rightKeyLimit;
+  static const int  s_upKeyLimit;
+  static const int  s_downKeyLimit;
+  static const int  s_leftKeyLimit;
+  static const int  s_selectKeyLimit;
 
 private: // forbidden default functions
   LcdKeypad& operator = (const LcdKeypad& );  // assignment operator

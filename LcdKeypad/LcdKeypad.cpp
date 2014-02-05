@@ -36,37 +36,37 @@ private:
 
 //=========================================================
 
-const int LcdKeypad::s_defaultLcdRSPin = 8;
-const int LcdKeypad::s_defaultLcdEnPin = 9;
-const int LcdKeypad::s_defaultLcdD4Pin = 4;
-const int LcdKeypad::s_defaultLcdD5Pin = 5;
-const int LcdKeypad::s_defaultLcdD6Pin = 6;
-const int LcdKeypad::s_defaultLcdD7Pin = 7;
+const int  LcdKeypad::s_defaultLcdRSPin = 8;
+const int  LcdKeypad::s_defaultLcdEnPin = 9;
+const int  LcdKeypad::s_defaultLcdD4Pin = 4;
+const int  LcdKeypad::s_defaultLcdD5Pin = 5;
+const int  LcdKeypad::s_defaultLcdD6Pin = 6;
+const int  LcdKeypad::s_defaultLcdD7Pin = 7;
 
-const int LcdKeypad::s_defaultLcdBackLightPWMPin    =  10;
-const int LcdKeypad::s_defaultLcdBackLightIntensity = 100;
+const int  LcdKeypad::s_defaultLcdBackLightCtrlPin = 10;
+const bool LcdKeypad::s_defaultIsLcdBackLightOn    = false;
 
-const int LcdKeypad::s_defaultKeyAdcPin   = A0;
-const int LcdKeypad::s_defaultKeyPollTime = 50;
+const int  LcdKeypad::s_defaultKeyAdcPin   = A0;
+const int  LcdKeypad::s_defaultKeyPollTime = 50;
 
-const int LcdKeypad::s_rightKeyLimit  =  65;
-const int LcdKeypad::s_upKeyLimit     = 221;
-const int LcdKeypad::s_downKeyLimit   = 395;
-const int LcdKeypad::s_leftKeyLimit   = 602;
-const int LcdKeypad::s_selectKeyLimit = 873;
+const int  LcdKeypad::s_rightKeyLimit  =  65;
+const int  LcdKeypad::s_upKeyLimit     = 221;
+const int  LcdKeypad::s_downKeyLimit   = 395;
+const int  LcdKeypad::s_leftKeyLimit   = 602;
+const int  LcdKeypad::s_selectKeyLimit = 873;
 
 LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
                      int lcdD4Pin, int lcdD5Pin, int lcdD6Pin, int lcdD7Pin,
-                     int lcdBackLightPWMPin,     int lcdBackLightIntensity)
+                     int lcdBackLightCtrlPin, bool isLcdBackLightOn)
 : LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin)
-, m_lcdBackLightPWMPin(lcdBackLightPWMPin)
-, m_lcdBackLightIntensity(lcdBackLightIntensity)
+, m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
+, m_isLcdBackLightOn(isLcdBackLightOn)
 , m_currentKey(NO_KEY)
 , m_keyDebouncer(new Debounce())
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
 {
-  //pinMode(m_lcdBackLightPWMPin, OUTPUT);
-  setBackLightIntensity();
+  pinMode(m_lcdBackLightCtrlPin, OUTPUT);
+  setBackLightControl();
 
   // button adc input
   pinMode(s_defaultKeyAdcPin, INPUT);         //ensure Key ADC pin is an input
@@ -83,46 +83,49 @@ LcdKeypad::~LcdKeypad()
   delete m_keyDebouncer; m_keyDebouncer = 0;
 }
 
-void LcdKeypad::setBackLightIntensity(int lcdBackLightIntensity)
+void LcdKeypad::setBackLightOn(bool isLcdBackLightOn)
 {
-  m_lcdBackLightIntensity = lcdBackLightIntensity;
-  setBackLightIntensity();
+  m_isLcdBackLightOn = isLcdBackLightOn;
+  setBackLightControl();
 }
 
-void LcdKeypad::setBackLightIntensity()
+void LcdKeypad::setBackLightControl()
 {
-  //analogWrite(m_lcdBackLightPWMPin, m_lcdBackLightIntensity);
+  digitalWrite(m_lcdBackLightCtrlPin, m_isLcdBackLightOn);
 }
 
 void LcdKeypad::handleButtons()
 {
-  if (m_keyDebouncer->isEventAbleToPass())
-  {
-    int keyPress = analogRead(s_defaultKeyAdcPin);
+  int keyPress = analogRead(s_defaultKeyAdcPin);
 
-    if (keyPress < s_rightKeyLimit)
+  int polledKey = NO_KEY;
+
+  if (keyPress < s_rightKeyLimit)
+  {
+    polledKey = RIGHT_KEY;
+  }
+  else if (keyPress < s_upKeyLimit)
+  {
+    polledKey = UP_KEY;
+  }
+  else if (keyPress < s_downKeyLimit)
+  {
+    polledKey = DOWN_KEY;
+  }
+  else if (keyPress < s_leftKeyLimit)
+  {
+    polledKey = LEFT_KEY;
+  }
+  else if (keyPress < s_selectKeyLimit)
+  {
+    polledKey = SELECT_KEY;
+  }
+
+  if (polledKey != m_currentKey)
+  {
+    if (m_keyDebouncer->isEventAbleToPass())
     {
-      m_currentKey = RIGHT_KEY;
-    }
-    else if (keyPress < s_upKeyLimit)
-    {
-      m_currentKey = UP_KEY;
-    }
-    else if (keyPress < s_downKeyLimit)
-    {
-      m_currentKey = DOWN_KEY;
-    }
-    else if (keyPress < s_leftKeyLimit)
-    {
-      m_currentKey = LEFT_KEY;
-    }
-    else if (keyPress < s_selectKeyLimit)
-    {
-      m_currentKey = SELECT_KEY;
-    }
-    else
-    {
-      m_currentKey = NO_KEY;
+      m_currentKey = polledKey;
     }
   }
 }
