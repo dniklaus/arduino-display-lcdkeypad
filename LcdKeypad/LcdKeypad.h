@@ -39,7 +39,7 @@ public:
 
   void handleButtons();
 
-  int getCurrentKey();
+  Key getCurrentKey();
 
   bool isNoKey();
   bool isUpKey();

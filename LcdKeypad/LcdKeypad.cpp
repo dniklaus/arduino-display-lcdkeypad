@@ -145,7 +145,7 @@ void LcdKeypad::handleButtons()
   }
 }
 
-int LcdKeypad::getCurrentKey()
+LcdKeypad::Key LcdKeypad::getCurrentKey()
 {
   return m_currentKey;
 }
