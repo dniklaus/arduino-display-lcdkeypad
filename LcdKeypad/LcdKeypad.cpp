@@ -64,6 +64,7 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 , m_currentKey(NO_KEY)
 , m_keyDebouncer(new Debounce())
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
+, m_adapter(0)
 {
   pinMode(m_lcdBackLightCtrlPin, OUTPUT);
   setBackLightControl();
@@ -83,6 +84,16 @@ LcdKeypad::~LcdKeypad()
   delete m_keyDebouncer; m_keyDebouncer = 0;
 }
 
+void LcdKeypad::attachAdapter(LcdKeypadAdapter* adapter)
+{
+  m_adapter = adapter;
+}
+
+LcdKeypadAdapter* LcdKeypad::adapter()
+{
+  return m_adapter;
+}
+
 void LcdKeypad::setBackLightOn(bool isLcdBackLightOn)
 {
   m_isLcdBackLightOn = isLcdBackLightOn;
@@ -98,7 +109,7 @@ void LcdKeypad::handleButtons()
 {
   int keyPress = analogRead(s_defaultKeyAdcPin);
 
-  int polledKey = NO_KEY;
+  Key polledKey = NO_KEY;
 
   if (keyPress < s_rightKeyLimit)
   {
@@ -126,6 +137,10 @@ void LcdKeypad::handleButtons()
     if (m_keyDebouncer->isEventAbleToPass())
     {
       m_currentKey = polledKey;
+      if (0 != m_adapter)
+      {
+        m_adapter->handleKeyChanged(polledKey);
+      }
     }
   }
 }

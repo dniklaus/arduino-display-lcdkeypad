@@ -10,6 +10,8 @@
 
 #include "LiquidCrystal.h"
 
+class LcdKeypadAdapter;
+
 class LcdKeypad : public LiquidCrystal
 {
 public:
@@ -21,7 +23,7 @@ public:
     , UP_KEY     = 3
     , DOWN_KEY   = 4
     , RIGHT_KEY  = 5
-  } key;
+  } Key;
 
   LcdKeypad(int  lcdRSPin              = s_defaultLcdRSPin,
             int  lcdEnPin              = s_defaultLcdEnPin,
@@ -46,15 +48,19 @@ public:
   bool isLeftKey();
   bool isRightKey();
 
+  void attachAdapter(LcdKeypadAdapter* adapter);
+  LcdKeypadAdapter* adapter();
+
 private:
   void setBackLightControl();
 
 private:
   int m_lcdBackLightCtrlPin;
   bool m_isLcdBackLightOn;
-  int m_currentKey;
+  Key m_currentKey;
   class Debounce* m_keyDebouncer;
   class Timer* m_keyPollTimer;
+  class LcdKeypadAdapter* m_adapter;
 
 private:
   static const int  s_defaultLcdRSPin;
@@ -75,9 +81,26 @@ private:
   static const int  s_selectKeyLimit;
 
 private: // forbidden default functions
-  LcdKeypad& operator = (const LcdKeypad& );  // assignment operator
-  LcdKeypad(const LcdKeypad& src);            // copy constructor
-
+  LcdKeypad& operator = (const LcdKeypad& src);  // assignment operator
+  LcdKeypad(const LcdKeypad& src);               // copy constructor
 };
+
+//-----------------------------------------------------------------------------
+
+class LcdKeypadAdapter
+{
+public:
+  virtual void handleKeyChanged(LcdKeypad::Key newKey) = 0;
+  virtual ~LcdKeypadAdapter() { }
+
+protected:
+  LcdKeypadAdapter() { }
+
+private: // forbidden default functions
+  LcdKeypadAdapter& operator = (const LcdKeypadAdapter& src);  // assignment operator
+  LcdKeypadAdapter(const LcdKeypadAdapter& src);               // copy constructor
+};
+
+//-----------------------------------------------------------------------------
 
 #endif /* LCDKEYPAD_H_ */
