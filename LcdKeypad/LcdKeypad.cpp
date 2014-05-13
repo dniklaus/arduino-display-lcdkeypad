@@ -7,7 +7,6 @@
 
 #include "Arduino.h"
 #include "Timer.h"
-#include "TimerAdapter.h"
 #include "Debounce.h"
 #include "LiquidCrystal.h"
 #include "LcdKeypad.h"
