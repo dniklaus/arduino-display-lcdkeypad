@@ -7,7 +7,6 @@
 
 #include "Arduino.h"
 #include "Timer.h"
-#include "Debounce.h"
 #include "LiquidCrystal.h"
 #include "LcdKeypad.h"
 
@@ -61,7 +60,6 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 , m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
 , m_isLcdBackLightOn(isLcdBackLightOn)
 , m_currentKey(NO_KEY)
-, m_keyDebouncer(new Debounce())
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
 , m_adapter(0)
 {
@@ -80,7 +78,6 @@ LcdKeypad::~LcdKeypad()
 {
   delete m_keyPollTimer->adapter();
   delete m_keyPollTimer; m_keyPollTimer = 0;
-  delete m_keyDebouncer; m_keyDebouncer = 0;
 }
 
 void LcdKeypad::attachAdapter(LcdKeypadAdapter* adapter)
@@ -133,13 +130,10 @@ void LcdKeypad::handleButtons()
 
   if (polledKey != m_currentKey)
   {
-    if (m_keyDebouncer->isEventAbleToPass())
+    m_currentKey = polledKey;
+    if (0 != m_adapter)
     {
-      m_currentKey = polledKey;
-      if (0 != m_adapter)
-      {
-        m_adapter->handleKeyChanged(polledKey);
-      }
+      m_adapter->handleKeyChanged(polledKey);
     }
   }
 }

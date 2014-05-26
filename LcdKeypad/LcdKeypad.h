@@ -58,7 +58,6 @@ private:
   int m_lcdBackLightCtrlPin;
   bool m_isLcdBackLightOn;
   Key m_currentKey;
-  class Debounce* m_keyDebouncer;
   class Timer* m_keyPollTimer;
   class LcdKeypadAdapter* m_adapter;
 
