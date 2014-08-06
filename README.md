@@ -15,5 +15,5 @@ Supports the 5 key pad buttons.
 
 Requires:
 
-* LiquidCrystal (Arduino Library)
+* LiquidCrystal (Arduino Library: http://arduino.cc/en/Reference/LiquidCrystal)
 * Timer (http://code.google.com/p/arduino-utils-timer/)
