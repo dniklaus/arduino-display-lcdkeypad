@@ -2,7 +2,7 @@ arduino-display-lcdkeypad
 =========================
 
 Arduino LCD Keypad Shield driver.
-*
+
 The HW can be ordered from here:
 
 * http://www.robotshop.com/dfrobot-lcd-keypad-shield-arduino-1.html
