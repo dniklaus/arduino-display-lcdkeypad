@@ -7,9 +7,9 @@
 
 #include "Arduino.h"
 #include "Timer.h"
+#include "LiquidTWI2.h"
 #include "LiquidCrystal.h"
 #include "LcdKeypad.h"
-
 
 //=========================================================
 
@@ -34,40 +34,57 @@ private:
 
 //=========================================================
 
-const int  LcdKeypad::s_defaultLcdRSPin = 8;
-const int  LcdKeypad::s_defaultLcdEnPin = 9;
-const int  LcdKeypad::s_defaultLcdD4Pin = 4;
-const int  LcdKeypad::s_defaultLcdD5Pin = 5;
-const int  LcdKeypad::s_defaultLcdD6Pin = 6;
-const int  LcdKeypad::s_defaultLcdD7Pin = 7;
+const int  LcdKeypad::s_defaultLcdRSPin    = 8;
+const int  LcdKeypad::s_defaultLcdEnPin    = 9;
+const int  LcdKeypad::s_defaultLcdD4Pin    = 4;
+const int  LcdKeypad::s_defaultLcdD5Pin    = 5;
+const int  LcdKeypad::s_defaultLcdD6Pin    = 6;
+const int  LcdKeypad::s_defaultLcdD7Pin    = 7;
 
 const int  LcdKeypad::s_defaultLcdBackLightCtrlPin = 10;
-const bool LcdKeypad::s_defaultIsLcdBackLightOn    = false;
+const bool LcdKeypad::s_defaultIsLcdBackLightOn = false;
 
 const int  LcdKeypad::s_defaultKeyAdcPin   = A0;
 const int  LcdKeypad::s_defaultKeyPollTime = 50;
 
-const int  LcdKeypad::s_rightKeyLimit  =  65;
-const int  LcdKeypad::s_upKeyLimit     = 221;
-const int  LcdKeypad::s_downKeyLimit   = 395;
-const int  LcdKeypad::s_leftKeyLimit   = 602;
-const int  LcdKeypad::s_selectKeyLimit = 873;
+const int  LcdKeypad::s_rightKeyLimit      =  65;
+const int  LcdKeypad::s_upKeyLimit         = 221;
+const int  LcdKeypad::s_downKeyLimit       = 395;
+const int  LcdKeypad::s_leftKeyLimit       = 602;
+const int  LcdKeypad::s_selectKeyLimit     = 873;
 
-LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
-                     int lcdD4Pin, int lcdD5Pin, int lcdD6Pin, int lcdD7Pin,
-                     int lcdBackLightCtrlPin, bool isLcdBackLightOn)
-: LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin)
-, m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
-, m_isLcdBackLightOn(isLcdBackLightOn)
+LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, LcdDeviceType lcdDeviceType,
+                     uint8_t detectDevice, uint8_t backlightInverted)
+: m_lcdBackLightCtrlPin(0)
+, m_backlightColor(LCDBL_OFF)
 , m_currentKey(NO_KEY)
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
 , m_adapter(0)
+, m_liquidTwi2(new LiquidTWI2(i2cAddr, detectDevice, backlightInverted))
+, m_liquidCrystal(0)
+{
+  setMCPType(mcptype);
+
+  // set up the LCD's number of columns and rows:
+  begin(16, 2);
+}
+
+LcdKeypad::LcdKeypad(LcdDeviceType lcdDeviceType, int lcdRSPin, int lcdEnPin,
+                     int lcdD4Pin, int lcdD5Pin, int lcdD6Pin, int lcdD7Pin,
+                     int lcdBackLightCtrlPin, bool isLcdBackLightOn)
+: m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
+, m_backlightColor(isLcdBackLightOn ? LCDBL_WHITE : LCDBL_OFF)
+, m_currentKey(NO_KEY)
+, m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
+, m_adapter(0)
+, m_liquidTwi2(0)
+, m_liquidCrystal(new LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin))
 {
   setBackLightControl();
 
   // button adc input
-  pinMode(s_defaultKeyAdcPin, INPUT);         //ensure Key ADC pin is an input
-  digitalWrite(s_defaultKeyAdcPin, LOW);      //ensure pullup is off on Key ADC pin
+  pinMode(s_defaultKeyAdcPin, INPUT);         // ensure Key ADC pin is an input
+  digitalWrite(s_defaultKeyAdcPin, LOW);      // ensure pull-up is off on Key ADC pin
 
   // set up the LCD's number of columns and rows:
   begin(16, 2);
@@ -75,8 +92,10 @@ LcdKeypad::LcdKeypad(int lcdRSPin, int lcdEnPin,
 
 LcdKeypad::~LcdKeypad()
 {
+  delete m_liquidCrystal; m_liquidCrystal = 0;
+  delete m_liquidTwi2;    m_liquidTwi2    = 0;
   delete m_keyPollTimer->adapter();
-  delete m_keyPollTimer; m_keyPollTimer = 0;
+  delete m_keyPollTimer;  m_keyPollTimer  = 0;
 }
 
 void LcdKeypad::attachAdapter(LcdKeypadAdapter* adapter)
@@ -89,51 +108,95 @@ LcdKeypadAdapter* LcdKeypad::adapter()
   return m_adapter;
 }
 
+void LcdKeypad::setBacklight(LcdBacklightColor lcdBacklightColor)
+{
+  m_backlightColor = lcdBacklightColor;
+  setBackLightControl();
+}
+
 void LcdKeypad::setBackLightOn(bool isLcdBackLightOn)
 {
-  m_isLcdBackLightOn = isLcdBackLightOn;
+  m_backlightColor = isLcdBackLightOn ? LCDBL_WHITE : LCDBL_OFF;
   setBackLightControl();
 }
 
 void LcdKeypad::setBackLightControl()
 {
-  if (m_isLcdBackLightOn)
+  if (0 != m_liquidTwi2)
   {
-    pinMode(m_lcdBackLightCtrlPin, INPUT);
-    digitalWrite(m_lcdBackLightCtrlPin, LOW);
+    m_liquidTwi2->setBacklight(m_backlightColor);
   }
-  else
+  else if (0 != m_liquidCrystal)
   {
-    pinMode(m_lcdBackLightCtrlPin, OUTPUT);
-    digitalWrite(m_lcdBackLightCtrlPin, LOW);
+    bool isLcdBackLightOn = (LCDBL_OFF != m_backlightColor);
+    if (isLcdBackLightOn)
+    {
+      pinMode(m_lcdBackLightCtrlPin, INPUT);
+      digitalWrite(m_lcdBackLightCtrlPin, LOW);
+    }
+    else
+    {
+      pinMode(m_lcdBackLightCtrlPin, OUTPUT);
+      digitalWrite(m_lcdBackLightCtrlPin, LOW);
+    }
   }
 }
 
 void LcdKeypad::handleButtons()
 {
-  int keyPress = analogRead(s_defaultKeyAdcPin);
-
   Key polledKey = NO_KEY;
 
-  if (keyPress < s_rightKeyLimit)
+  if (0 != m_liquidTwi2)
   {
-    polledKey = RIGHT_KEY;
+    uint8_t buttons = m_liquidTwi2->readButtons();
+    if (buttons)
+    {
+      if (buttons & BUTTON_RIGHT)
+      {
+        polledKey = RIGHT_KEY;
+      }
+      else if (buttons & BUTTON_UP)
+      {
+        polledKey = UP_KEY;
+      }
+      else if (buttons & BUTTON_DOWN)
+      {
+        polledKey = DOWN_KEY;
+      }
+      else if (buttons & BUTTON_LEFT)
+      {
+        polledKey = LEFT_KEY;
+      }
+      else if (buttons & BUTTON_SELECT)
+      {
+        polledKey = SELECT_KEY;
+      }
+    }
   }
-  else if (keyPress < s_upKeyLimit)
+  else if (0 != m_liquidCrystal)
   {
-    polledKey = UP_KEY;
-  }
-  else if (keyPress < s_downKeyLimit)
-  {
-    polledKey = DOWN_KEY;
-  }
-  else if (keyPress < s_leftKeyLimit)
-  {
-    polledKey = LEFT_KEY;
-  }
-  else if (keyPress < s_selectKeyLimit)
-  {
-    polledKey = SELECT_KEY;
+    int keyPress = analogRead(s_defaultKeyAdcPin);
+
+    if (keyPress < s_rightKeyLimit)
+    {
+      polledKey = RIGHT_KEY;
+    }
+    else if (keyPress < s_upKeyLimit)
+    {
+      polledKey = UP_KEY;
+    }
+    else if (keyPress < s_downKeyLimit)
+    {
+      polledKey = DOWN_KEY;
+    }
+    else if (keyPress < s_leftKeyLimit)
+    {
+      polledKey = LEFT_KEY;
+    }
+    else if (keyPress < s_selectKeyLimit)
+    {
+      polledKey = SELECT_KEY;
+    }
   }
 
   if (polledKey != m_currentKey)
@@ -153,30 +216,280 @@ LcdKeypad::Key LcdKeypad::getCurrentKey()
 
 bool LcdKeypad::isNoKey()
 {
-  return (LcdKeypad::NO_KEY == m_currentKey);
+  return (NO_KEY == m_currentKey);
 }
 
 bool LcdKeypad::isUpKey()
 {
-  return (LcdKeypad::UP_KEY == m_currentKey);
+  return (UP_KEY == m_currentKey);
 }
 
 bool LcdKeypad::isDownKey()
 {
-  return (LcdKeypad::DOWN_KEY == m_currentKey);
+  return (DOWN_KEY == m_currentKey);
 }
 
 bool LcdKeypad::isSelectKey()
 {
-  return (LcdKeypad::SELECT_KEY == m_currentKey);
+  return (SELECT_KEY == m_currentKey);
 }
 
 bool LcdKeypad::isLeftKey()
 {
-  return (LcdKeypad::LEFT_KEY == m_currentKey);
+  return (LEFT_KEY == m_currentKey);
 }
 
 bool LcdKeypad::isRightKey()
 {
-  return (LcdKeypad::RIGHT_KEY == m_currentKey);
+  return (RIGHT_KEY == m_currentKey);
+}
+
+void LcdKeypad::begin(uint8_t cols, uint8_t rows, uint8_t dotsize)
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->begin(cols, rows, dotsize);
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->begin(cols, rows, dotsize);
+  }
+}
+
+void LcdKeypad::clear()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->clear();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->clear();
+  }
+}
+
+void LcdKeypad::home()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->home();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->home();
+  }
+}
+
+void LcdKeypad::noDisplay()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->noDisplay();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->noDisplay();
+  }
+}
+
+void LcdKeypad::display()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->display();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->display();
+  }
+}
+
+void LcdKeypad::noBlink()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->noBlink();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->noBlink();
+  }
+}
+
+void LcdKeypad::blink()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->blink();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->blink();
+  }
+}
+
+void LcdKeypad::noCursor()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->noCursor();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->noCursor();
+  }
+}
+
+void LcdKeypad::cursor()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->cursor();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->cursor();
+  }
+}
+
+void LcdKeypad::scrollDisplayLeft()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->scrollDisplayLeft();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->scrollDisplayLeft();
+  }
+}
+
+void LcdKeypad::scrollDisplayRight()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->scrollDisplayRight();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->scrollDisplayRight();
+  }
+}
+
+void LcdKeypad::leftToRight()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->leftToRight();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->leftToRight();
+  }
+}
+
+void LcdKeypad::rightToLeft()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->rightToLeft();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->rightToLeft();
+  }
+}
+
+void LcdKeypad::autoscroll()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->autoscroll();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->autoscroll();
+  }
+}
+
+void LcdKeypad::noAutoscroll()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->noAutoscroll();
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->noAutoscroll();
+  }
+}
+
+void LcdKeypad::createChar(uint8_t location, uint8_t charmap[])
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->createChar(location, charmap);
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->createChar(location, charmap);
+  }
+}
+
+void LcdKeypad::setCursor(uint8_t col, uint8_t row)
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->setCursor(col, row);
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->setCursor(col, row);
+  }
+}
+
+size_t LcdKeypad::write(uint8_t value)
+{
+#if defined(ARDUINO) && (ARDUINO >= 100) //scl
+#endif
+
+  size_t ret = 0;
+  if (0 != m_liquidTwi2)
+  {
+    ret = m_liquidTwi2->write(value);
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    ret = m_liquidCrystal->write(value);
+  }
+  return ret;
+}
+
+void LcdKeypad::command(uint8_t value)
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->command(value);
+  }
+  else if (0 != m_liquidCrystal)
+  {
+    m_liquidCrystal->command(value);
+  }
+}
+
+void LcdKeypad::setMCPType(MCPType mcptype)
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->setMCPType(mcptype);
+  }
+}
+
+//#ifdef MCP23017
+uint8_t LcdKeypad::readButtons()
+{
+  if (0 != m_liquidTwi2)
+  {
+    m_liquidTwi2->readButtons();
+  }
 }
