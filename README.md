@@ -28,3 +28,59 @@ Requires:
 * LiquidCrystal (Arduino Library: http://arduino.cc/en/Reference/LiquidCrystal)
 * LiquidTWI2 (A lean, high speed I2C LCD Library for Arduino: https://github.com/lincomatic/LiquidTWI2)
 * Timer (https://github.com/dniklaus/arduino-utils-timer)
+
+
+
+Usage:
+
+    // Timer library, https://github.com/dniklaus/arduino-utils-timer
+    #include <Timer.h>
+    
+    // LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad
+    #include <LcdKeypad.h>
+    
+    LcdKeypad* myLcdKeypad = 0;
+    
+    class MyLcdKeypadAdapter : public LcdKeypadAdapter
+    {
+    private:
+      LcdKeypad* m_lcdKeypad;
+      unsigned char m_value;
+    public:
+      MyLcdKeypadAdapter(LcdKeypad* lcdKeypad)
+      : m_lcdKeypad(lcdKeypad)
+      , m_value(0)
+      { }
+      
+      void handleKeyChanged(LcdKeypad::Key newKey)
+      {
+        if (0 != m_lcdKeypad)
+        {
+          if (LcdKeypad::UP_KEY == newKey)
+          {
+            m_value++;
+          }
+          else if (LcdKeypad::DOWN_KEY == newKey)
+          {
+            m_value--;
+          }
+          m_lcdKeypad->setBacklight(static_cast<LcdKeypad::LcdBacklightColor>(LcdKeypad::LCDBL_WHITE & m_value));
+        }
+      }
+    };
+    
+    setup()
+    {
+      // use this line if you use a I2C based LcdKeypad shield
+      myLcdKeypad = new LcdKeypad(LcdKeypad::MCPT_MCP23017, 0x20, LcdKeypad::LCD_DT_TWI2);
+
+      // use this line if you use a 4 bit parallel data LcdKeypad shield
+      //  myLcdKeypad = new LcdKeypad(LcdKeypad::LCD_DT_CRYST);
+      
+      myLcdKeypad->attachAdapter(new MyLcdKeypadAdapter(myLcdKeypad));
+    }
+    
+    loop
+    {
+      scheduleTimers();
+    }
