@@ -485,11 +485,12 @@ void LcdKeypad::setMCPType(MCPType mcptype)
   }
 }
 
-//#ifdef MCP23017
 uint8_t LcdKeypad::readButtons()
 {
+  uint8_t buttons = 0;
   if (0 != m_liquidTwi2)
   {
-    m_liquidTwi2->readButtons();
+    buttons = m_liquidTwi2->readButtons();
   }
+  return buttons;
 }
