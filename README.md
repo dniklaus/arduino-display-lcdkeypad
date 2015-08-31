@@ -91,7 +91,7 @@ setup()
   myLcdKeypad->print("Value:");   // print a Value label on the second line of the display
 }
     
-loop
+loop()
 {
   scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
 }
