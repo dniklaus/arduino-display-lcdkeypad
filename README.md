@@ -9,7 +9,6 @@ The **LiquidCrystal** HW can be ordered from here:
 * http://www.dx.com/p/arduino-2-6-lcd-keypad-shield-expansion-board-134404#.U4z6LygUdpU
 
 The schematic of this LcdKeypad Shield can be found [here](http://forum.arduino.cc/index.php?action=dlattach;topic=95618.0;attach=15041).
-
 Uses the LiquidCrystal driver (http://arduino.cc/en/Reference/LiquidCrystal)
 
 
@@ -17,15 +16,16 @@ Uses the LiquidCrystal driver (http://arduino.cc/en/Reference/LiquidCrystal)
 The **LiquidTWI2** HW can be ordered from here:
 * http://www.adafruit.com/product/772 (blue & white)
 * http://www.adafruit.com/products/716 (RGB color, negative)
-* http://www.adafruit.com/products/398 (RGB color, positive)
-
 Uses the LiquidTWI2 driver (https://github.com/lincomatic/LiquidTWI2)
 
 
+
 This driver supports the 5 key pad buttons (one button at a time only).
+This driver detects whether a LiquidTWI2 HW or a LiquidCrystal HW type is present and automatically chooses the apropriate driver variant.
+As long as this driver is used, the I2C address 0x20 is reserved for the LiquidTWI2 HW type (even when you are actually using the LiquidCrystal HW type).
 
 **Requires**:
-* Wire (Arduino Library)
+* Wire (Arduino Library: https://www.arduino.cc/en/Reference/Wire)
 * LiquidCrystal (Arduino Library: http://arduino.cc/en/Reference/LiquidCrystal)
 * LiquidTWI2 (A lean, high speed I2C LCD Library for Arduino: https://github.com/lincomatic/LiquidTWI2)
 * Timer (https://github.com/dniklaus/arduino-utils-timer)
@@ -50,7 +50,7 @@ This driver supports the 5 key pad buttons (one button at a time only).
     public:
       MyLcdKeypadAdapter(LcdKeypad* lcdKeypad)
       : m_lcdKeypad(lcdKeypad)
-      , m_value(0)
+      , m_value(7)
       { }
       
       void handleKeyChanged(LcdKeypad::Key newKey)
@@ -65,6 +65,9 @@ This driver supports the 5 key pad buttons (one button at a time only).
           {
             m_value--;
           }
+          m_lcdKeypad->setCursor(0, 1);
+          m_lcdKeypad->print(m_value);
+          m_lcdKeypad->print("                ");
           m_lcdKeypad->setBacklight(static_cast<LcdKeypad::LcdBacklightColor>(LcdKeypad::LCDBL_WHITE & m_value));
         }
       }
@@ -72,16 +75,24 @@ This driver supports the 5 key pad buttons (one button at a time only).
     
     setup()
     {
-      // use this line if you use a I2C based LcdKeypad shield
-      myLcdKeypad = new LcdKeypad(LcdKeypad::MCPT_MCP23017, 0x20, LcdKeypad::LCD_DT_TWI2);
-
-      // use this line if you use a 4 bit parallel data LcdKeypad shield
-      //  myLcdKeypad = new LcdKeypad(LcdKeypad::LCD_DT_CRYST);
-      
+      myLcdKeypad = new LcdKeypad();
       myLcdKeypad->attachAdapter(new MyLcdKeypadAdapter(myLcdKeypad));
+      
+      myLcdKeypad->setCursor(0, 0);
+      myLcdKeypad->print("Value:");
     }
     
     loop
     {
       scheduleTimers();
     }
+
+
+**Description**:
+
+In global area (outside of the setup() and loop() functions), define a specific LcdKeypadAdapter implementation, particularly implement the handleKeyChanged() method where you define the actions to be performed on specific key pressed events.
+
+In the setup() function instatiate an object of the LcdKeypad class. Here the appropriate driver type will be selected according to the present HW. Attach your specific LcdKeypadAdapter implementation to the driver so you get the key pressed notifications.
+
+In the loop() function just let the timer get ticked by calling scheduleTimers(). This will keep the key pressed event detection running.
+
