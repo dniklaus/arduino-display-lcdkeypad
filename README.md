@@ -9,6 +9,7 @@ The **LiquidCrystal** HW can be ordered from here:
 * http://www.dx.com/p/arduino-2-6-lcd-keypad-shield-expansion-board-134404#.U4z6LygUdpU
 
 The schematic of this LcdKeypad Shield can be found [here](http://forum.arduino.cc/index.php?action=dlattach;topic=95618.0;attach=15041).
+
 Uses the LiquidCrystal driver (http://arduino.cc/en/Reference/LiquidCrystal)
 
 
@@ -16,6 +17,7 @@ Uses the LiquidCrystal driver (http://arduino.cc/en/Reference/LiquidCrystal)
 The **LiquidTWI2** HW can be ordered from here:
 * http://www.adafruit.com/product/772 (blue & white)
 * http://www.adafruit.com/products/716 (RGB color, negative)
+
 Uses the LiquidTWI2 driver (https://github.com/lincomatic/LiquidTWI2)
 
 
