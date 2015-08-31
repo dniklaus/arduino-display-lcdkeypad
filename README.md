@@ -33,7 +33,9 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
 
 
 **Usage**:
-
+    
+    ```javascript
+    
     // Timer library, https://github.com/dniklaus/arduino-utils-timer
     #include <Timer.h>
     
@@ -94,6 +96,7 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
     {
       scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
     }
+    ```
 
 
 **Description**:
