@@ -42,6 +42,7 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
     
     LcdKeypad* myLcdKeypad = 0;
     
+    // Implement specific LcdKeypadAdapter in order to allow receiving key press events
     class MyLcdKeypadAdapter : public LcdKeypadAdapter
     {
     private:
@@ -53,6 +54,7 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
       , m_value(7)
       { }
       
+      // Specific handleKeyChanged() method implementation - define your actions here
       void handleKeyChanged(LcdKeypad::Key newKey)
       {
         if (0 != m_lcdKeypad)
@@ -65,9 +67,13 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
           {
             m_value--;
           }
-          m_lcdKeypad->setCursor(0, 1);
-          m_lcdKeypad->print(m_value);
-          m_lcdKeypad->print("                ");
+          m_lcdKeypad->setCursor(0, 1);  // position the cursor at beginning of the second line
+          
+          m_lcdKeypad->print(m_value);             // print the value on first line of the display
+          m_lcdKeypad->print("                ");  // wipe out characters behind the printed value
+          
+          // RGB colored backlight: set according to the current value
+          // monochrome backlight: set backlight on or off according to the current value
           m_lcdKeypad->setBacklight(static_cast<LcdKeypad::LcdBacklightColor>(LcdKeypad::LCDBL_WHITE & m_value));
         }
       }
@@ -75,22 +81,24 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
     
     setup()
     {
-      myLcdKeypad = new LcdKeypad();
+      myLcdKeypad = new LcdKeypad();  // instatiate an object of the LcdKeypad class, using default parameters
+      
+      // Attach the specific LcdKeypadAdapter implementation (dependency injection)
       myLcdKeypad->attachAdapter(new MyLcdKeypadAdapter(myLcdKeypad));
       
-      myLcdKeypad->setCursor(0, 0);
-      myLcdKeypad->print("Value:");
+      myLcdKeypad->setCursor(0, 0);   // position the cursor at beginning of the first line
+      myLcdKeypad->print("Value:");   // print a Value label on the second line of the display
     }
     
     loop
     {
-      scheduleTimers();
+      scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
     }
 
 
 **Description**:
 
-In global area (outside of the setup() and loop() functions), define a specific LcdKeypadAdapter implementation, particularly implement the handleKeyChanged() method where you define the actions to be performed on specific key pressed events.
+In global area (outside of the setup() and loop() functions), define a specific LcdKeypadAdapter implementation, particularly implement the handleKeyChanged() method where you define the actions to be performed on specific key press events.
 
 In the setup() function instatiate an object of the LcdKeypad class. Here the appropriate driver type will be selected according to the present HW. Attach your specific LcdKeypadAdapter implementation to the driver so you get the key pressed notifications.
 
