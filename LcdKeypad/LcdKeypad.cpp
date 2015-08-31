@@ -6,6 +6,7 @@
  */
 
 #include "Arduino.h"
+#include "Wire.h"
 #include "Timer.h"
 #include "LiquidTWI2.h"
 #include "LiquidCrystal.h"
@@ -53,41 +54,45 @@ const int  LcdKeypad::s_downKeyLimit       = 395;
 const int  LcdKeypad::s_leftKeyLimit       = 602;
 const int  LcdKeypad::s_selectKeyLimit     = 873;
 
-LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, LcdDeviceType lcdDeviceType,
-                     uint8_t detectDevice, uint8_t backlightInverted)
-: m_lcdBackLightCtrlPin(0)
+LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uint8_t backlightInverted,
+                     int lcdRSPin, int lcdEnPin, int lcdD4Pin, int lcdD5Pin, int lcdD6Pin, int lcdD7Pin,
+                     int lcdBackLightCtrlPin, bool isLcdBackLightOn)
+: m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
 , m_backlightColor(LCDBL_OFF)
 , m_currentKey(NO_KEY)
 , m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
 , m_adapter(0)
-, m_liquidTwi2(new LiquidTWI2(i2cAddr, detectDevice, backlightInverted))
+, m_liquidTwi2(0)
 , m_liquidCrystal(0)
 {
-  setMCPType(mcptype);
+  Wire.beginTransmission(i2cAddr);
+  int error = Wire.endTransmission();
 
-  // set up the LCD's number of columns and rows:
-  begin(16, 2);
-}
+  if (0 == error)
+  {
+    m_liquidTwi2 = new LiquidTWI2(i2cAddr, detectDevice, backlightInverted);
+    setMCPType(mcptype);
 
-LcdKeypad::LcdKeypad(LcdDeviceType lcdDeviceType, int lcdRSPin, int lcdEnPin,
-                     int lcdD4Pin, int lcdD5Pin, int lcdD6Pin, int lcdD7Pin,
-                     int lcdBackLightCtrlPin, bool isLcdBackLightOn)
-: m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
-, m_backlightColor(isLcdBackLightOn ? LCDBL_WHITE : LCDBL_OFF)
-, m_currentKey(NO_KEY)
-, m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
-, m_adapter(0)
-, m_liquidTwi2(0)
-, m_liquidCrystal(new LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin))
-{
-  setBackLightControl();
+    setBackLightControl();
 
-  // button adc input
-  pinMode(s_defaultKeyAdcPin, INPUT);         // ensure Key ADC pin is an input
-  digitalWrite(s_defaultKeyAdcPin, LOW);      // ensure pull-up is off on Key ADC pin
+    // set up the LCD's number of columns and rows:
+    begin(16, 2);
+  }
+  else if (0 == m_liquidTwi2->LcdDetected())
+  {
+    delete m_liquidTwi2; m_liquidTwi2 = 0;
 
-  // set up the LCD's number of columns and rows:
-  begin(16, 2);
+    m_liquidCrystal = new LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin);
+
+    setBackLightControl();
+
+    // button adc input
+    pinMode(s_defaultKeyAdcPin, INPUT);         // ensure Key ADC pin is an input
+    digitalWrite(s_defaultKeyAdcPin, LOW);      // ensure pull-up is off on Key ADC pin
+
+    // set up the LCD's number of columns and rows:
+    begin(16, 2);
+  }
 }
 
 LcdKeypad::~LcdKeypad()
@@ -131,11 +136,13 @@ void LcdKeypad::setBackLightControl()
     bool isLcdBackLightOn = (LCDBL_OFF != m_backlightColor);
     if (isLcdBackLightOn)
     {
+      Serial.println("LcdKeypad::setBackLightControl, isLcdBackLightOn=1");
       pinMode(m_lcdBackLightCtrlPin, INPUT);
       digitalWrite(m_lcdBackLightCtrlPin, LOW);
     }
     else
     {
+      Serial.println("LcdKeypad::setBackLightControl, isLcdBackLightOn=0");
       pinMode(m_lcdBackLightCtrlPin, OUTPUT);
       digitalWrite(m_lcdBackLightCtrlPin, LOW);
     }
