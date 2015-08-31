@@ -100,7 +100,7 @@ loop()
 
 **Description**:
 
-In the global area (outside of the `setup()` and `loop()` functions), define a specific `LcdKeypadAdapter` implementation, particularly implement the `<handleKeyChanged()` method where you define the actions to be performed on specific key press events.
+In the global area (outside of the `setup()` and `loop()` functions), define a specific `LcdKeypadAdapter` implementation, particularly implement the `handleKeyChanged()` method where you define the actions to be performed on specific key press events.
 
 In the `setup()` function instatiate an object of the `LcdKeypad` class. Here the appropriate driver type will be selected according to the present HW. Attach your specific `LcdKeypadAdapter` implementation to the driver so you get the key pressed notifications.
 
