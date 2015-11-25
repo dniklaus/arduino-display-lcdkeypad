@@ -18,7 +18,7 @@ The **LiquidTWI2** HW can be ordered from here:
 * http://www.adafruit.com/product/772 (blue & white)
 * http://www.adafruit.com/products/716 (RGB color, negative)
 
-Uses the LiquidTWI2 driver (https://github.com/lincomatic/LiquidTWI2)
+Uses a copy of the files taken from the LiquidTWI2 driver (https://github.com/lincomatic/LiquidTWI2)
 
 
 
@@ -29,7 +29,6 @@ As long as this driver is used, the I2C address 0x20 is reserved for the LiquidT
 **Requires**:
 * Wire (Arduino Library: https://www.arduino.cc/en/Reference/Wire)
 * LiquidCrystal (Arduino Library: http://arduino.cc/en/Reference/LiquidCrystal)
-* LiquidTWI2 (A lean, high speed I2C LCD Library for Arduino: https://github.com/lincomatic/LiquidTWI2)
 * Timer (https://github.com/dniklaus/arduino-utils-timer)
 
 
