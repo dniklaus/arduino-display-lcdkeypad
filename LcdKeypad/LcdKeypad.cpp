@@ -65,23 +65,32 @@ LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uin
 , m_liquidTwi2(0)
 , m_liquidCrystal(0)
 {
+  // first try to reach the LiquidTWI2 through I2C
   Wire.beginTransmission(i2cAddr);
   int error = Wire.endTransmission();
-
   if (0 == error)
   {
+    // the device is reachable so now create LiquidTWI2 object
     m_liquidTwi2 = new LiquidTWI2(i2cAddr, detectDevice, backlightInverted);
     setMCPType(mcptype);
 
-    setBackLightControl();
-
-    // set up the LCD's number of columns and rows:
+    // scan for the device & set up the LCD's number of columns and rows:
     begin(16, 2);
-  }
-  else if (0 == m_liquidTwi2->LcdDetected())
-  {
-    delete m_liquidTwi2; m_liquidTwi2 = 0;
 
+    if (0 == m_liquidTwi2->LcdDetected())
+    {
+	  // device not detected (might be another item on this I2C address)
+      delete m_liquidTwi2; m_liquidTwi2 = 0;
+    }
+    else
+    {
+      setBackLightControl();
+    }
+  }
+
+  if (0 == m_liquidTwi2)
+  {
+    // no success with LiquidTWI2, try the LiquidCrystal type
     m_liquidCrystal = new LiquidCrystal(lcdRSPin, lcdEnPin, lcdD4Pin, lcdD5Pin, lcdD6Pin, lcdD7Pin);
 
     setBackLightControl();

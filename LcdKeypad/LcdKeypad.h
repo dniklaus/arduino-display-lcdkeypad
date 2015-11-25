@@ -64,7 +64,7 @@ public:
   /**
    *  self selecting constructor (tries LCD_DT_TWI2 first, and then LCD_DT_CRYST if LCD_DT_TWI2 not successfully found)
    */
-  LcdKeypad(MCPType mcptype = MCPT_MCP23017, uint8_t i2cAddr = 0x20, uint8_t detectDevice = 0, uint8_t backlightInverted = 0,
+  LcdKeypad(MCPType mcptype = MCPT_MCP23017, uint8_t i2cAddr = 0x20, uint8_t detectDevice = 1, uint8_t backlightInverted = 0,
             int lcdRSPin = s_defaultLcdRSPin, int lcdEnPin = s_defaultLcdEnPin,
             int lcdD4Pin = s_defaultLcdD4Pin, int lcdD5Pin = s_defaultLcdD5Pin,
             int lcdD6Pin = s_defaultLcdD6Pin, int lcdD7Pin = s_defaultLcdD7Pin,
