@@ -65,6 +65,8 @@ LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uin
 , m_liquidTwi2(0)
 , m_liquidCrystal(0)
 {
+  Wire.begin();
+
   // first try to reach the LiquidTWI2 through I2C
   Wire.beginTransmission(i2cAddr);
   int error = Wire.endTransmission();
