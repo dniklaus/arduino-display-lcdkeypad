@@ -491,7 +491,7 @@ void LcdKeypad::command(uint8_t value)
   }
   else if (0 != m_liquidCrystal)
   {
-    m_liquidCrystal->command(value);
+    //m_liquidCrystal->command(value);
   }
 }
 
