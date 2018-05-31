@@ -39,10 +39,12 @@ As long as this driver is used, the **I2C address 0x20** is reserved for the Liq
 **Usage**:
 
 ```cpp
-// Timer library, https://github.com/dniklaus/arduino-utils-timer
+// Timer library, https://github.com/dniklaus/wiring-timer, 
+//   add it by using the Arduino IDE Library Manager (search for wiring-timer)
 #include <Timer.h>
 
-// LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad
+// LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad, 
+//   add it by using the Arduino IDE Library Manager (search for arduino-display-lcdkeypad)
 #include <LcdKeypad.h>
 
 LcdKeypad* myLcdKeypad = 0;
@@ -72,9 +74,8 @@ public:
       {
         m_value--;
       }
-      m_lcdKeypad->setCursor(0, 1);  // position the cursor at beginning of the second line
-     
-      m_lcdKeypad->print(m_value);             // print the value on first line of the display
+      m_lcdKeypad->setCursor(0, 1);            // position the cursor at beginning of the second line    
+      m_lcdKeypad->print(m_value);             // print the value on the second line of the display
       m_lcdKeypad->print("                ");  // wipe out characters behind the printed value
      
       // RGB colored backlight: set according to the current value
@@ -86,18 +87,18 @@ public:
     
 void setup()
 {
-  myLcdKeypad = new LcdKeypad();  // instatiate an object of the LcdKeypad class, using default parameters
+  myLcdKeypad = new LcdKeypad();  // instantiate an object of the LcdKeypad class, using default parameters
   
   // Attach the specific LcdKeypadAdapter implementation (dependency injection)
   myLcdKeypad->attachAdapter(new MyLcdKeypadAdapter(myLcdKeypad));
   
   myLcdKeypad->setCursor(0, 0);   // position the cursor at beginning of the first line
-  myLcdKeypad->print("Value:");   // print a Value label on the second line of the display
+  myLcdKeypad->print("Value:");   // print a Value label on the first line of the display
 }
     
 void loop()
 {
-  scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
+  yield();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
 }
 ```
 
@@ -106,6 +107,6 @@ void loop()
 
 In the global area (outside of the `setup()` and `loop()` functions), define a specific `LcdKeypadAdapter` implementation, particularly implement the `handleKeyChanged()` method where you define the actions to be performed on specific key press events.
 
-In the `setup()` function instatiate an object of the `LcdKeypad` class. Here the appropriate driver type will be selected according to the present HW. Attach your specific `LcdKeypadAdapter` implementation to the driver so you get the key pressed notifications.
+In the `setup()` function instantiate an object of the `LcdKeypad` class. Here the appropriate driver type will be selected according to the present HW. Attach your specific `LcdKeypadAdapter` implementation to the driver so you get the key pressed notifications.
 
-In the `loop()` function just let the timer get ticked by calling `scheduleTimers()`. This will keep the key pressed event detection running.
+In the `loop()` function just let the timer get ticked by calling `yield()`. This will keep the key pressed event detection running.
