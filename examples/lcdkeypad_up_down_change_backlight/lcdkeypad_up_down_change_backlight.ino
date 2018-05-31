@@ -1,7 +1,9 @@
-// Timer library, https://github.com/dniklaus/arduino-utils-timer
+// Timer library, https://github.com/dniklaus/wiring-timer, 
+//   add it by using the Arduino IDE Library Manager (search for wiring-timer)
 #include <Timer.h>
 
-// LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad
+// LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad, 
+//   add it by using the Arduino IDE Library Manager (search for arduino-display-lcdkeypad)
 #include <LcdKeypad.h>
 
 LcdKeypad* myLcdKeypad = 0;
@@ -31,9 +33,8 @@ public:
       {
         m_value--;
       }
-      m_lcdKeypad->setCursor(0, 1);  // position the cursor at beginning of the second line
-     
-      m_lcdKeypad->print(m_value);             // print the value on first line of the display
+      m_lcdKeypad->setCursor(0, 1);            // position the cursor at beginning of the second line
+      m_lcdKeypad->print(m_value);             // print the value on the second line of the display
       m_lcdKeypad->print("                ");  // wipe out characters behind the printed value
      
       // RGB colored backlight: set according to the current value
@@ -45,13 +46,13 @@ public:
     
 void setup()
 {
-  myLcdKeypad = new LcdKeypad();  // instatiate an object of the LcdKeypad class, using default parameters
+  myLcdKeypad = new LcdKeypad();  // instantiate an object of the LcdKeypad class, using default parameters
   
   // Attach the specific LcdKeypadAdapter implementation (dependency injection)
   myLcdKeypad->attachAdapter(new MyLcdKeypadAdapter(myLcdKeypad));
   
   myLcdKeypad->setCursor(0, 0);   // position the cursor at beginning of the first line
-  myLcdKeypad->print("Value:");   // print a Value label on the second line of the display
+  myLcdKeypad->print("Value:");   // print a Value label on the first line of the display
 }
     
 void loop()
