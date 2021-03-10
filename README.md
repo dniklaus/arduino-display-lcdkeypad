@@ -31,16 +31,16 @@ As long as this driver is used, the **I2C address 0x20** is reserved for the Liq
 **Requires**:
 * Wire (Arduino Library: https://www.arduino.cc/en/Reference/Wire)
 * LiquidCrystal (Arduino Library: http://arduino.cc/en/Reference/LiquidCrystal)
-* Timer (https://github.com/dniklaus/wiring-timer, Arduino Library Manager: wiring-timer
+* SpinTimer (https://github.com/dniklaus/spin-timer, Arduino Library Manager: spin-timer
 
 
 
 **Usage**:
 
 ```cpp
-// Timer library, https://github.com/dniklaus/spin-timer, 
+// SpinTimer library, https://github.com/dniklaus/spin-timer, 
 //   add it by using the Arduino IDE Library Manager (search for spin-timer)
-#include <Timer.h>
+#include <SpinTimer.h>
 
 // LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad, 
 //   add it by using the Arduino IDE Library Manager (search for arduino-display-lcdkeypad)

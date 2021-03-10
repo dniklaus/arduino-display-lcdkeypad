@@ -1,6 +1,6 @@
-// Timer library, https://github.com/dniklaus/wiring-timer, 
-//   add it by using the Arduino IDE Library Manager (search for wiring-timer)
-#include <Timer.h>
+// SpinTimer library, https://github.com/dniklaus/spin-timer, 
+//   add it by using the Arduino IDE Library Manager (search for spin-timer)
+#include <SpinTimer.h>
 
 // LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad, 
 //   add it by using the Arduino IDE Library Manager (search for arduino-display-lcdkeypad)
@@ -57,5 +57,5 @@ void setup()
     
 void loop()
 {
-  yield();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
+  scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
 }
