@@ -38,8 +38,8 @@ As long as this driver is used, the **I2C address 0x20** is reserved for the Liq
 **Usage**:
 
 ```cpp
-// Timer library, https://github.com/dniklaus/wiring-timer, 
-//   add it by using the Arduino IDE Library Manager (search for wiring-timer)
+// Timer library, https://github.com/dniklaus/spin-timer, 
+//   add it by using the Arduino IDE Library Manager (search for spin-timer)
 #include <Timer.h>
 
 // LcdKeypad, https://github.com/dniklaus/arduino-display-lcdkeypad, 
@@ -97,7 +97,7 @@ void setup()
     
 void loop()
 {
-  yield();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
+  scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
 }
 ```
 
@@ -108,4 +108,4 @@ In the global area (outside of the `setup()` and `loop()` functions), define a s
 
 In the `setup()` function instantiate an object of the `LcdKeypad` class. Here the appropriate driver type will be selected according to the present HW. Attach your specific `LcdKeypadAdapter` implementation to the driver so you get the key pressed notifications.
 
-In the `loop()` function just let the timer get ticked by calling `yield()`. This will keep the key pressed event detection running.
+In the `loop()` function just let the timer get ticked by calling `scheduleTimers()`. This will keep the key pressed event detection running.

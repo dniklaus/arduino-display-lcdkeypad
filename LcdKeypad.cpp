@@ -7,17 +7,17 @@
 
 #include "Arduino.h"
 #include "Wire.h"
-#include "Timer.h"
+#include "SpinTimer.h"
 #include "LiquidTWI2.h"
 #include "LiquidCrystal.h"
 #include "LcdKeypad.h"
 
 //=========================================================
 
-class KeyPollTimerAdapter : public TimerAdapter
+class KeyPollTimerAction : public SpinTimerAction
 {
 public:
-  KeyPollTimerAdapter(LcdKeypad* lcdKeypad)
+  KeyPollTimerAction(LcdKeypad* lcdKeypad)
   : m_lcdKeypad(lcdKeypad)
   { }
 
@@ -60,7 +60,7 @@ LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uin
 : m_lcdBackLightCtrlPin(lcdBackLightCtrlPin)
 , m_backlightColor(LCDBL_OFF)
 , m_currentKey(NO_KEY)
-, m_keyPollTimer(new Timer(new KeyPollTimerAdapter(this), Timer::IS_RECURRING, s_defaultKeyPollTime))
+, m_keyPollTimer(new SpinTimer(s_defaultKeyPollTime, new KeyPollTimerAction(this), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART))
 , m_adapter(0)
 , m_liquidTwi2(0)
 , m_liquidCrystal(0)
@@ -81,8 +81,9 @@ LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uin
 
     if (0 == m_liquidTwi2->LcdDetected())
     {
-	  // device not detected (might be another item on this I2C address)
-      delete m_liquidTwi2; m_liquidTwi2 = 0;
+	    // device not detected (might be another item on this I2C address)
+      delete m_liquidTwi2; 
+      m_liquidTwi2 = 0;
     }
     else
     {
@@ -108,10 +109,17 @@ LcdKeypad::LcdKeypad(MCPType mcptype, uint8_t i2cAddr, uint8_t detectDevice, uin
 
 LcdKeypad::~LcdKeypad()
 {
-  delete m_liquidCrystal; m_liquidCrystal = 0;
-  delete m_liquidTwi2;    m_liquidTwi2    = 0;
-  delete m_keyPollTimer->adapter();
-  delete m_keyPollTimer;  m_keyPollTimer  = 0;
+  delete m_liquidCrystal; 
+  m_liquidCrystal = 0;
+  
+  delete m_liquidTwi2;    
+  m_liquidTwi2    = 0;
+  
+  delete m_keyPollTimer->action();
+  m_keyPollTimer->attachAction(0);
+
+  delete m_keyPollTimer;  
+  m_keyPollTimer  = 0;
 }
 
 void LcdKeypad::attachAdapter(LcdKeypadAdapter* adapter)

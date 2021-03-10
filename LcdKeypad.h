@@ -10,7 +10,7 @@
 
 #include "Print.h"
 
-class Timer;
+class SpinTimer;
 class LcdKeypadAdapter;
 class LiquidTWI2;
 class LiquidCrystal;
@@ -129,7 +129,7 @@ private:
   int               m_lcdBackLightCtrlPin;
   LcdBacklightColor m_backlightColor;
   Key               m_currentKey;
-  Timer*            m_keyPollTimer;
+  SpinTimer*        m_keyPollTimer;
   LcdKeypadAdapter* m_adapter;
   LiquidTWI2*       m_liquidTwi2;
   LiquidCrystal*    m_liquidCrystal;
