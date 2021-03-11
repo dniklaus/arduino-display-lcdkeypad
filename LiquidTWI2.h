@@ -131,6 +131,7 @@
 class LiquidTWI2 : public Print {
 public:
 	LiquidTWI2(uint8_t i2cAddr,uint8_t detectDevice=0,uint8_t backlightInverted=0);
+	virtual LiquidTWI2() { }
 
 	void begin(uint8_t cols, uint8_t rows,uint8_t charsize = LCD_5x8DOTS);
 
