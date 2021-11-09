@@ -57,5 +57,5 @@ void setup()
     
 void loop()
 {
-  yield();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
+  scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad driver's keyPollTimer
 }
