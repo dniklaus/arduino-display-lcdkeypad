@@ -20,7 +20,7 @@ The **LiquidTWI2** HW can be ordered from here:
 * http://www.adafruit.com/product/772 (blue & white)
 * http://www.adafruit.com/products/716 (RGB color, negative)
 
-Uses a copy of the files taken from the LiquidTWI2 driver: https://github.com/lincomatic/LiquidTWI2
+Uses a copy of the files taken from the LiquidTWI2 driver: https://github.com/lincomatic/LiquidTWI2 (9e23d4574569b36028636c9683bf2b34adad394e / latest by 2020-06-21).
 
 
 
@@ -97,7 +97,7 @@ void setup()
     
 void loop()
 {
-  yield();  // Get the timer(s) ticked, in particular the LcdKeypad dirver's keyPollTimer
+  scheduleTimers();  // Get the timer(s) ticked, in particular the LcdKeypad driver's keyPollTimer
 }
 ```
 
@@ -108,4 +108,4 @@ In the global area (outside of the `setup()` and `loop()` functions), define a s
 
 In the `setup()` function instantiate an object of the `LcdKeypad` class. Here the appropriate driver type will be selected according to the present HW. Attach your specific `LcdKeypadAdapter` implementation to the driver so you get the key pressed notifications.
 
-In the `loop()` function just let the timer get ticked by calling `yield()`. This will keep the key pressed event detection running.
+In the `loop()` function just let the timer get ticked by calling `scheduleTimers()`. This will keep the key pressed event detection running.
